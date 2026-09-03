@@ -215,6 +215,20 @@ def _error_envelope(
     return ToolEnvelope.model_validate(payload).model_dump(mode="json", exclude_none=True)
 
 
+
+def restrict_toolsets(
+    toolsets: tuple[ToolsetSpec, ...], allowed_modules: Iterable[str]
+) -> tuple[ToolsetSpec, ...]:
+    """Drop modules outside the allowlist; toolsets left with no modules disappear."""
+    allowed = frozenset(allowed_modules)
+    restricted: list[ToolsetSpec] = []
+    for spec in toolsets:
+        modules = tuple(module for module in spec.modules if module in allowed)
+        if modules:
+            restricted.append(ToolsetSpec(spec.name, spec.description, modules))
+    return tuple(restricted)
+
+
 class ProgressiveToolCatalog:
     """Source-indexed catalog backed by a non-advertised FastMCP registry."""
 
@@ -230,8 +244,8 @@ class ProgressiveToolCatalog:
         self.package = package
         self.tools_dir = tools_dir
         self.hidden_mcp = hidden_mcp
-        self.toolsets = toolsets
         self._allowed_modules = tuple(allowed_modules)
+        self.toolsets = restrict_toolsets(toolsets, self._allowed_modules)
         self._module_tools_cache: dict[str, tuple[str, ...]] | None = None
         self._tool_modules_cache: dict[str, str] | None = None
         self._validate_toolset_modules()
@@ -488,4 +502,5 @@ __all__ = [
     "TOOLSET_SPECS",
     "ToolsetSpec",
     "register_progressive_tools",
+    "restrict_toolsets",
 ]

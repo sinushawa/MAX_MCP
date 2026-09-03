@@ -34,5 +34,6 @@
   <Components Description="post-start-up scripts parts">
     <RuntimeRequirements OS="Win64" Platform="3ds Max" SeriesMin="2023" SeriesMax="2027" />
     <ComponentEntry ModuleName="./Contents/scripts/mcp_server.ms" />
+    <ComponentEntry ModuleName="./Contents/scripts/mcp_settings.ms" />
   </Components>
 </ApplicationPackage>

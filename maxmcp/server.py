@@ -4,6 +4,7 @@ import os
 import sys
 from importlib import import_module
 from functools import lru_cache
+from typing import Iterable
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from .max_client import MaxClient
@@ -252,49 +253,125 @@ SPECIALTY_TOOL_MODULES = (
 )
 
 
+_TOOL_PROFILES = frozenset({"core", "full", "progressive"})
+ALL_TOOL_MODULES = CORE_TOOL_MODULES + SPECIALTY_TOOL_MODULES
+
+
+def _user_config() -> configparser.ConfigParser | None:
+    """Read the user mcp_config.ini under LOCALAPPDATA/3dsmax-mcp, or None when unavailable."""
+    local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+    if not local_appdata:
+        return None
+    config_path = Path(local_appdata) / "3dsmax-mcp" / "mcp_config.ini"
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(config_path, encoding="utf-8")
+    except (OSError, configparser.Error):
+        return None
+    return parser
+
+
 def _tool_profile() -> str:
     value = os.environ.get("MCP_TOOL_PROFILE") or os.environ.get("THREEDSMAX_MCP_TOOL_PROFILE")
     if value is not None:
         normalized = value.strip().lower()
-        return normalized if normalized in {"core", "full", "progressive"} else "full"
+        return normalized if normalized in _TOOL_PROFILES else "full"
 
-    local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
-    if local_appdata:
-        config_path = Path(local_appdata) / "3dsmax-mcp" / "mcp_config.ini"
-        parser = configparser.ConfigParser()
-        try:
-            parser.read(config_path, encoding="utf-8")
-            normalized = parser.get("mcp", "tool_profile", fallback="").strip().lower()
-            if normalized in {"core", "full", "progressive"}:
-                return normalized
-        except (OSError, configparser.Error):
-            pass
+    parser = _user_config()
+    if parser is not None:
+        normalized = parser.get("mcp", "tool_profile", fallback="").strip().lower()
+        if normalized in _TOOL_PROFILES:
+            return normalized
     return "full"
 
 
+def parse_module_list(raw: str | None) -> tuple[str, ...]:
+    """Split a comma/semicolon/whitespace separated module list, lowercased, deduplicated."""
+    if not raw:
+        return ()
+    seen: list[str] = []
+    for token in raw.replace(";", ",").replace("\n", ",").split(","):
+        for name in token.split():
+            name = name.strip().lower()
+            if name and name not in seen:
+                seen.append(name)
+    return tuple(seen)
+
+
+def _module_filter_setting(env_key: str, ini_key: str) -> tuple[str, ...]:
+    """Environment overrides the ini file per key; an empty value clears the list."""
+    value = os.environ.get(env_key)
+    if value is None:
+        parser = _user_config()
+        value = parser.get("mcp", ini_key, fallback="") if parser is not None else ""
+    return parse_module_list(value)
+
+
+def _module_filters() -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Return (enabled_modules, disabled_modules) from env vars or the user config."""
+    return (
+        _module_filter_setting("MCP_ENABLED_MODULES", "enabled_modules"),
+        _module_filter_setting("MCP_DISABLED_MODULES", "disabled_modules"),
+    )
+
+
+def filter_tool_modules(
+    modules: Iterable[str],
+    enabled: Iterable[str] = (),
+    disabled: Iterable[str] = (),
+) -> tuple[str, ...]:
+    """Apply the enabled allowlist (when non-empty) and the disabled blocklist, in order."""
+    enabled_set = frozenset(enabled)
+    disabled_set = frozenset(disabled)
+    known = frozenset(ALL_TOOL_MODULES)
+    for name in sorted((enabled_set | disabled_set) - known):
+        logging.warning("3dsmax-mcp: unknown tool module in settings ignored: %s", name)
+    result = tuple(
+        name
+        for name in modules
+        if (not enabled_set or name in enabled_set) and name not in disabled_set
+    )
+    return result
+
+
+def active_tool_modules(profile: str | None = None) -> tuple[str, ...]:
+    """Modules the given profile loads after the settings filter is applied."""
+    profile = profile or _tool_profile()
+    modules = list(CORE_TOOL_MODULES)
+    if profile in {"full", "progressive"}:
+        modules.extend(SPECIALTY_TOOL_MODULES)
+    enabled, disabled = _module_filters()
+    active = filter_tool_modules(modules, enabled, disabled)
+    dropped = [name for name in modules if name not in active]
+    if dropped:
+        logging.info("3dsmax-mcp: tool modules disabled by settings: %s", ", ".join(dropped))
+    return active
+
+
 def _register_tool_modules() -> None:
-    if _tool_profile() == "progressive":
+    profile = _tool_profile()
+    modules = active_tool_modules(profile)
+    if profile == "progressive":
         register_progressive_tools(
             public_mcp=mcp,
             hidden_mcp=_progressive_mcp,
             package=__package__,
             tools_dir=Path(__file__).resolve().parent / "tools",
-            allowed_modules=CORE_TOOL_MODULES + SPECIALTY_TOOL_MODULES,
+            allowed_modules=modules,
             before_call=client.clear_last_response,
             transport_provider=client.get_last_transport,
         )
         return
 
-    modules = list(CORE_TOOL_MODULES)
-    if _tool_profile() == "full":
-        modules.extend(SPECIALTY_TOOL_MODULES)
     for name in modules:
         import_module(f".tools.{name}", package=__package__)
 
 
 # Import tool modules to trigger @mcp.tool() registration. Default is full;
 # set MCP_TOOL_PROFILE=core for everyday tools or progressive for the three
-# lazy discovery/dispatch meta-tools.
+# lazy discovery/dispatch meta-tools. Individual modules can be switched off
+# with disabled_modules / enabled_modules in mcp_config.ini [mcp] (or the
+# MCP_DISABLED_MODULES / MCP_ENABLED_MODULES environment variables).
 _register_tool_modules()
 
 

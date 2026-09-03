@@ -140,6 +140,29 @@ uv run 3dsmax-mcp
 
 Specialty modules in full profile: `chat`, `data_channel`, `effects`, `floor_plan`, `mcg`, `railclone`, `render`, `render_automations`, `scattering`, `state_sets`, `tyflow`, `tyflow_graph`, `tyflow_patch`, `tyflow_manifest`, `tyflow_census`, `wire_params`.
 
+### Module filter
+
+Any profile can be trimmed further per module. Module names are the files in
+`maxmcp/tools/` (see the list above and `docs/TOOLS.md`).
+
+```ini
+[mcp]
+tool_profile = full
+; comma-separated; applied after the profile picks its modules
+disabled_modules = chat, tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, railclone, scattering, floor_plan, data_channel, mcg
+; optional allowlist; when non-empty only these modules load (disabled_modules still applies)
+enabled_modules =
+```
+
+`MCP_DISABLED_MODULES` and `MCP_ENABLED_MODULES` override the matching ini key for
+one launch; an empty environment value clears the list. Unknown names are logged and
+ignored. In the progressive profile, toolsets lose their filtered modules and
+disappear when empty.
+
+The simplest way to edit this is inside 3ds Max: **Customize UI -> MCP -> MCP Settings**
+opens a window with a checkbox per module plus the profile and safe-mode switches. It
+writes the ini file; reconnect your MCP client afterwards so the server restarts.
+
 ## Native identity, transactions, and scene QA
 
 `resolve_node_refs` converts a name, native handle, or absolute JSON-Pointer hierarchy path such as `/Rig/Camera` into a canonical `{handle, name, path, class, layer}` identity plus `sceneSeq`, the current persistent-mutation revision. It also reports `activitySeq` for interaction diagnostics. Selection and sub-object selection advance only `activitySeq`, so normal viewport clicking does not stale a guarded write. Supplying more than one selector cross-checks identity instead of silently retargeting a stale handle. Handles are scene/session-local; refresh after loading or resetting a scene.

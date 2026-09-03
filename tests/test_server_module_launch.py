@@ -20,6 +20,9 @@ class ServerModuleLaunchTests(unittest.IsolatedAsyncioTestCase):
             for key, value in os.environ.items()
             if key not in {"MCP_TOOL_PROFILE", "THREEDSMAX_MCP_TOOL_PROFILE"}
         }
+        # Keep the developer's own mcp_config.ini module filter out of these tests.
+        env.setdefault("MCP_DISABLED_MODULES", "")
+        env.setdefault("MCP_ENABLED_MODULES", "")
         if profile is not None:
             env["MCP_TOOL_PROFILE"] = profile
         if extra_env:

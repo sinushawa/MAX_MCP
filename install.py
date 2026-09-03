@@ -41,6 +41,7 @@ APPLICATION_PACKAGE_DST = (
 )
 
 MS_SERVER = ROOT / "maxscript" / "mcp_server.ms"
+MS_SETTINGS = ROOT / "maxscript" / "mcp_settings.ms"
 CONFIG_SRC = ROOT / "mcp_config.ini"
 CONFIG_DIR = Path(os.environ.get("LOCALAPPDATA", "")) / "3dsmax-mcp"
 CONFIG_DST = CONFIG_DIR / "mcp_config.ini"
@@ -297,6 +298,8 @@ def stage_bundle(dest: Path) -> tuple[list[int], list[int]]:
 
     if MS_SERVER.exists():
         shutil.copy2(MS_SERVER, scripts_dir / "mcp_server.ms")
+    if MS_SETTINGS.exists():
+        shutil.copy2(MS_SETTINGS, scripts_dir / "mcp_settings.ms")
 
     (dest / "PackageContents.xml").write_text(
         package_contents_xml(pkg_version()), encoding="utf-8"
@@ -338,6 +341,8 @@ def deploy_application_package() -> bool:
     for year in missing:
         print(f"  SKIP: Contents/bin/mcp_bridge_{year}.gup (not built)")
     print("  OK: Contents/scripts/mcp_server.ms")
+    if MS_SETTINGS.exists():
+        print("  OK: Contents/scripts/mcp_settings.ms")
     print(f"  OK: {APPLICATION_PACKAGE_DST}")
     return True
 

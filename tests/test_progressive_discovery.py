@@ -29,7 +29,7 @@ class ProgressiveDiscoveryTests(unittest.IsolatedAsyncioTestCase):
         params = StdioServerParameters(
             command=sys.executable,
             args=["-m", "maxmcp.server"],
-            env={**os.environ, "MCP_TOOL_PROFILE": "progressive"},
+            env={**os.environ, "MCP_TOOL_PROFILE": "progressive", "MCP_DISABLED_MODULES": "", "MCP_ENABLED_MODULES": ""},
         )
         async with stdio_client(params) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
@@ -76,7 +76,7 @@ class ProgressiveDiscoveryTests(unittest.IsolatedAsyncioTestCase):
         params = StdioServerParameters(
             command=sys.executable,
             args=["-m", "maxmcp.server"],
-            env={**os.environ, "MCP_TOOL_PROFILE": "progressive"},
+            env={**os.environ, "MCP_TOOL_PROFILE": "progressive", "MCP_DISABLED_MODULES": "", "MCP_ENABLED_MODULES": ""},
         )
         async with stdio_client(params) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
