@@ -307,6 +307,42 @@ def stage_bundle(dest: Path) -> tuple[list[int], list[int]]:
     return included, missing
 
 
+def sync_tree(staging: Path, dest: Path) -> tuple[list[Path], list[Path]]:
+    """Copy staging over dest file by file. Returns (updated, failed) relative paths.
+
+    A running 3ds Max keeps its mcp_bridge_<year>.gup open, so deleting the whole
+    package and recreating it loses every other file when that unlink fails. Files
+    that are byte-identical are skipped, so a locked but unchanged plugin is harmless.
+    """
+    import filecmp
+
+    updated: list[Path] = []
+    failed: list[Path] = []
+    for src in sorted(staging.rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(staging)
+        target = dest / rel
+        try:
+            if target.exists() and filecmp.cmp(src, target, shallow=False):
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, target)
+            updated.append(rel)
+        except (PermissionError, OSError):
+            failed.append(rel)
+    # Remove files that no longer belong to the package (ignore locked ones).
+    if dest.exists():
+        staged = {p.relative_to(staging) for p in staging.rglob("*") if p.is_file()}
+        for old in sorted(dest.rglob("*")):
+            if old.is_file() and old.relative_to(dest) not in staged:
+                try:
+                    old.unlink()
+                except OSError:
+                    pass
+    return updated, failed
+
+
 def deploy_application_package() -> bool:
     print(f"\n[2/4] Application package -> {APPLICATION_PACKAGE_DST}")
     if not MS_SERVER.exists():
@@ -317,23 +353,25 @@ def deploy_application_package() -> bool:
         staging = Path(tmp) / BUNDLE_PACKAGE_NAME
         included, missing = stage_bundle(staging)
         try:
-            if APPLICATION_PACKAGE_DST.exists():
-                shutil.rmtree(APPLICATION_PACKAGE_DST)
-            shutil.copytree(staging, APPLICATION_PACKAGE_DST)
+            APPLICATION_PACKAGE_DST.mkdir(parents=True, exist_ok=True)
+            updated, failed = sync_tree(staging, APPLICATION_PACKAGE_DST)
         except (PermissionError, OSError):
+            updated, failed = [], [Path("*")]
+        if failed:
             # ProgramData ACLs can leave an admin-owned tree behind; retry elevated
-            print(f"  Need admin rights for {APPLICATION_PACKAGE_DST}")
-            cmd = (
-                f'rmdir /S /Q "{APPLICATION_PACKAGE_DST}" & '
-                f'xcopy /E /I /Y "{staging}" "{APPLICATION_PACKAGE_DST}"'
-            )
+            print(f"  Need admin rights for {APPLICATION_PACKAGE_DST} ({len(failed)} file(s))")
+            cmd = f'xcopy /E /I /Y "{staging}" "{APPLICATION_PACKAGE_DST}"'
             subprocess.run(
                 ["powershell", "-Command",
                  f'Start-Process -FilePath cmd.exe -ArgumentList \'/c {cmd}\' -Verb RunAs -Wait'],
                 capture_output=True, timeout=60,
             )
-            if not (APPLICATION_PACKAGE_DST / "PackageContents.xml").exists():
-                print(f"  FAILED: could not deploy to {APPLICATION_PACKAGE_DST}")
+            still_failed = [
+                rel for rel in failed
+                if not (APPLICATION_PACKAGE_DST / rel).exists()
+            ]
+            if still_failed:
+                print(f"  FAILED: could not deploy to {APPLICATION_PACKAGE_DST}: {still_failed}")
                 return False
 
     for year in included:
@@ -343,6 +381,10 @@ def deploy_application_package() -> bool:
     print("  OK: Contents/scripts/mcp_server.ms")
     if MS_SETTINGS.exists():
         print("  OK: Contents/scripts/mcp_settings.ms")
+    if updated:
+        print(f"  Updated {len(updated)} file(s); restart 3ds Max to load changes")
+    else:
+        print("  Already up to date")
     print(f"  OK: {APPLICATION_PACKAGE_DST}")
     return True
 

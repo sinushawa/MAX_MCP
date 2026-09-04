@@ -286,6 +286,11 @@ uv run python -m maxmcp.docsearch search "extrude a face on an Edit_Poly modifie
 The index lives next to the config file as `docs_index.json` in the 3dsmax-mcp folder
 under LOCALAPPDATA.
 
+`skills/3dsmax-mcp-dev/maxscript-vray.md` is a V-Ray 7 reference whose property names were
+harvested from the installed plugin with `getPropNames` (renderer, VRayMtl and other
+materials, maps, lights, camera, proxy, displacement, render elements). Rebuild the index
+after editing any reference file; the running proxy must be restarted to pick it up.
+
 **External clients** get the `search_maxscript_docs` tool (module `docs_search`, core
 profile). `execute_maxscript` errors on sub-object or Edit Poly scripts now hint at it.
 
