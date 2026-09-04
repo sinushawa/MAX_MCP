@@ -269,6 +269,43 @@ Open **MCP Chat** from Customize UI → MCP, or search the macro globally.
 
 External helper tools (for automation outside Max): `send_to_chat`, `chat_status`, `chat_reload`, `chat_clear`.
 
+## Local MAXScript reference retrieval
+
+Small local models know the tools but not the MAXScript API, so they invent property
+names. `maxmcp.docsearch` indexes the bundled reference files in
+`skills/3dsmax-mcp-dev/*.md` with an Ollama embedding model and serves the closest
+chunks two ways.
+
+**Build the index** (needs Ollama with `nomic-embed-text`, or set `--model`):
+
+```powershell
+uv run python -m maxmcp.docsearch build            # add --extra <folder> for your own .md notes
+uv run python -m maxmcp.docsearch search "extrude a face on an Edit_Poly modifier"
+```
+
+The index lives next to the config file as `docs_index.json` in the 3dsmax-mcp folder
+under LOCALAPPDATA.
+
+**External clients** get the `search_maxscript_docs` tool (module `docs_search`, core
+profile). `execute_maxscript` errors on sub-object or Edit Poly scripts now hint at it.
+
+**The in-Max chat window** cannot call Python tools, so run the retrieval proxy and point
+the chat at it. `Docs Proxy.bat` builds the index if missing and starts the proxy on
+port 11435; it forwards everything to Ollama and only rewrites the system message:
+
+```ini
+[llm]
+base_url = http://localhost:11435/v1
+model = qwen3.8:latest
+prompt_mode = full
+```
+
+Each turn the proxy embeds the latest user message plus the most recent failed
+MAXScript and its error, prepends the top matching reference chunks to the system
+prompt, and logs the chunk titles to its console. Retrieval failures never block the
+chat; the request is forwarded unchanged. `MAXMCP_OLLAMA_URL` and `MAXMCP_EMBED_MODEL`
+override the defaults.
+
 ## Building the native bridge
 
 Only needed when modifying C++ handlers.

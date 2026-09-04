@@ -37,6 +37,7 @@ global mcpSettings_coreModules = #(
 	#("session_context", "Session context"),
 	#("mainthread", "Main thread"),
 	#("execute", "Execute MAXScript"),
+	#("docs_search", "MAXScript docs search"),
 	#("tool_test", "Tool self-test"),
 	#("query_scene", "Query scene"),
 	#("scene_query", "Scene query"),

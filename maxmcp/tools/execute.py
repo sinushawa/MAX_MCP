@@ -14,6 +14,9 @@ def execute_maxscript(code: str = "", command: str = "") -> str:
     Use when: no dedicated MCP tool covers the operation (custom one-offs, rare APIs).
     Not when: objects, materials, selection, transforms, modifiers, layers, or scene queries —
     prefer the matching dedicated tool instead of raw MAXScript.
+    Before guessing an API (Edit Poly / sub-object ops, renderer settings, plugin classes):
+    call search_maxscript_docs or introspect_class first. Never invent property names;
+    after an "Unknown property" error, look the API up instead of retrying a variant.
     """
     script = code or command
     if not script:

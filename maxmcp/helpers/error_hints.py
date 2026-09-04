@@ -16,6 +16,18 @@ class ToolHint(TypedDict, total=False):
 # is scanned against user-supplied MAXScript; matches contribute tool names to
 # a deduplicated suggestion list returned in the error envelope's hint.
 MAXSCRIPT_SUGGESTION_RULES: tuple[tuple[re.Pattern[str], tuple[str, ...]], ...] = (
+    # Sub-object / Edit Poly work has no dedicated tool, and small models tend to
+    # invent property names here (selectionLevel, subObjectLevel, getObject...).
+    # Point them at the reference index and live introspection before they retry.
+    (
+        re.compile(
+            r"\bpolyop\.|\bpolyOp\.|\bmeshop\.|\bEditablePoly\b|\bEditable_Poly\b|\bEdit_Poly\b|"
+            r"\bselectionLevel\b|\bsubobjectLevel\b|\bsubObjectLevel\b|\bSetEPolySelLevel\b|"
+            r"\bSetOperation\b|\bextrudeFace|\bbevelFace|\binsetFace|\bchamfer|\bgetObject\b",
+            re.IGNORECASE,
+        ),
+        ("search_maxscript_docs", "introspect_instance", "inspect_modifier_properties"),
+    ),
     # OSL-related failures are particularly opaque and rarely tractable by
     # retrying MAXScript. introspect_osl is the only way to learn the shader's
     # actual parameter names, output channels, and connection rules.

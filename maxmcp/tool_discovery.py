@@ -98,8 +98,8 @@ TOOLSET_SPECS = (
     ),
     ToolsetSpec(
         "automation",
-        "Raw MAXScript fallback plus direct invocation and smoke-test drivers.",
-        ("execute", "tool_test"),
+        "Raw MAXScript fallback, local MAXScript reference search, direct invocation, and smoke-test drivers.",
+        ("execute", "docs_search", "tool_test"),
     ),
     ToolsetSpec(
         "data_channel",

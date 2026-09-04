@@ -231,6 +231,7 @@ CORE_TOOL_MODULES = (
     "keyframes",
     "tool_test",
     "mainthread",
+    "docs_search",
 )
 
 SPECIALTY_TOOL_MODULES = (

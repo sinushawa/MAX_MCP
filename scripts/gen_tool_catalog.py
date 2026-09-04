@@ -52,6 +52,7 @@ MODULE_CATEGORY = {
     "controllers": "Controllers",
     "wire_params": "Controllers",
     "execute": "Advanced",
+    "docs_search": "Advanced",
     "chat": "Chat",
     "data_channel": "Data Channel",
     "mcg": "Max Creation Graph",
