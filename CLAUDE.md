@@ -1,7 +1,7 @@
 # CLAUDE.md — working notes for this fork
 
 This is a personal fork of [cl0nazepamm/3dsmax-mcp](https://github.com/cl0nazepamm/3dsmax-mcp)
-(MIT, forked at v1.5.5), an MCP server that lets AI clients control Autodesk 3ds Max.
+(MIT, forked at v1.5.5, upstream v1.6.6 merged on 2026-09-05), an MCP server that lets AI clients control Autodesk 3ds Max.
 Read `README.md` for the upstream feature set and `docs/ADVANCED.md` for configuration.
 This file records what the fork adds, how the owner's machines are set up, and how to
 continue the work.
@@ -19,11 +19,12 @@ continue the work.
 |---|---|---|
 | Per-module tool filter | `maxmcp/server.py` (`filter_tool_modules`, `active_tool_modules`), `maxmcp/tool_discovery.py` (`restrict_toolsets`) | `[mcp] disabled_modules` / `enabled_modules` in the user ini, or `MCP_DISABLED_MODULES` / `MCP_ENABLED_MODULES` env vars. Works in core, full, and progressive profiles. |
 | In-Max settings window | `maxscript/mcp_settings.ms` | Macro **MCP Settings** (category MCP): checkbox per module, profile, safe mode. Its module tables must list every module in `CORE_TOOL_MODULES` + `SPECIALTY_TOOL_MODULES` (a test enforces this). Bundled by `install.py`. |
-| Local MAXScript reference retrieval | `maxmcp/docsearch/` (index, proxy, CLI), `maxmcp/tools/docs_search.py`, `Docs Proxy.bat` | Indexes `skills/3dsmax-mcp-dev/*.md` with Ollama embeddings. `search_maxscript_docs` tool for external clients; an OpenAI-compatible proxy on port 11435 injects retrieved chunks into the in-Max chat's system prompt (that chat can only call native tools, never Python ones). |
+| Local MAXScript reference retrieval | `maxmcp/docsearch/` (index, proxy, CLI), `maxmcp/tools/docs_search.py`, `Docs Proxy.bat` | Indexes `skills/3dsmax-mcp-dev/*.md` with Ollama embeddings. `search_maxscript_docs` tool for external clients. The OpenAI-compatible proxy on port 11435 was built for the in-Max chat, which upstream removed in 1.6.6; it still works for any local OpenAI-compatible client but nothing in Max uses it now. |
 | V-Ray 7 reference | `skills/3dsmax-mcp-dev/maxscript-vray.md` | Property names harvested from V-Ray 7.40.04 with `getPropNames` in 3ds Max 2025. Re-harvest when V-Ray updates (script pattern: run `getPropNames` per class under `3dsmaxbatch.exe`). |
 | Error hints / descriptions | `maxmcp/helpers/error_hints.py`, `maxmcp/tools/execute.py` | Edit Poly / sub-object scripts that fail now suggest `search_maxscript_docs` and introspection instead of retrying. |
 | Installer fix | `install.py` (`sync_tree`) | Bundle is synced file by file. Upstream deleted the whole package first; a running Max locks `mcp_bridge_<year>.gup`, and the failed delete left the package without its scripts. |
-| Tool reference | `docs/TOOLS.md` | Generated from `tool_playground/catalog.json`; regenerate with `scripts/gen_tool_catalog.py` then the snippet in git history of that doc. |
+| Tool reference | `docs/TOOLS.md`, `scripts/gen_tools_doc.py` | Generated from `tool_playground/catalog.json`; regenerate with `scripts/gen_tool_catalog.py` then `scripts/gen_tools_doc.py`. |
+| Tracked tests | `tests/` | Upstream stopped tracking its tests in 1.6.6 (`/tests/` gitignored). The fork keeps them tracked and removed only the ones for features upstream deleted (chat, builder). |
 
 ## Owner's environment (primary machine)
 
@@ -34,24 +35,18 @@ continue the work.
   `nomic-embed-text` (embeddings). No `gh` CLI; git uses the Windows credential manager.
 - Claude Code registration: `claude mcp add --scope user 3dsmax-mcp -- uv run --directory <repo> 3dsmax-mcp`.
 
-Chosen runtime config in `%LOCALAPPDATA%\3dsmax-mcp\mcp_config.ini` (not in git):
+Chosen runtime config in `%LOCALAPPDATA%dsmax-mcp\mcp_config.ini` (not in git):
 
 ```ini
 [mcp]
 safe_mode = true
 tool_profile = full
-disabled_modules = chat, tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, railclone, scattering, floor_plan, data_channel, mcg
+disabled_modules = tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, railclone, scattering, data_channel, mcg
 enabled_modules =
-
-[llm]                     ; in-Max chat window only
-base_url = http://localhost:11435/v1   ; the docs proxy; Ollama itself is 11434
-model = qwen3.8:latest
-prompt_mode = full
-tool_profile = core
 ```
 
-`%LOCALAPPDATA%\3dsmax-mcp\.env` holds `LLM_API_KEY=ollama` (placeholder: the native chat
-refuses to start without a key, Ollama ignores it). Never commit real keys.
+The `[llm]` section and `.env` key that the in-Max chat used are gone with upstream 1.6.6;
+leftovers in an existing ini are ignored. Never commit real keys.
 
 ## Setting up on a new machine
 
@@ -63,7 +58,6 @@ uv sync
 uv run python install.py --tool-profile full      # answer "1" (project) at the skills prompt
 # then edit %LOCALAPPDATA%\3dsmax-mcp\mcp_config.ini as above, restart 3ds Max
 uv run python -m maxmcp.docsearch build           # needs Ollama + nomic-embed-text
-"Docs Proxy.bat"                                  # keep running while using MCP Chat
 ```
 
 Run tests with `uv run --with pytest python -m pytest tests -q`. Tests are offline; nothing
@@ -76,11 +70,11 @@ pinned as the existing tests do.
   the target window. The claim dies with that process.
 - After any change to `maxscript/*.ms` or the bundle, run `install.deploy_application_package()`
   (or `install.py`) and restart Max; scripts load at startup only.
-- The in-Max chat exposes only tools with a native C++ handler. Python-only tools are
-  skipped by `scripts/gen_tool_registry.py`, so knowledge for that chat has to come through
-  the prompt or the proxy, not through new Python tools.
+- Upstream 1.6.6 removed the standalone in-Max chat (native `chat_ui`, `llm_client`, the
+  `chat` tool module) and the `build_floor_plan` tool, and added curve/mesh modeling tools plus
+  an agent viewport. The rebuilt `.gup` binaries ship with it; redeploy the bundle after merging.
 - Retrieval fixes API knowledge (wrong property names) but not planning; small local models
-  still loop on errors. Prefer Claude Code through the same bridge for mesh editing.
+  still loop on errors. Prefer Claude Code through the bridge for mesh editing.
 - `execute_maxscript` code is un-escaped once in transit: use forward slashes in paths.
 - 3ds Max scene units on the owner's files are meters; "20 cm" is 0.2 units.
 
@@ -95,7 +89,8 @@ pinned as the existing tests do.
 ## Open ideas, in rough priority
 
 1. A `poly_operation` tool wrapping Edit Poly extrude / bevel / inset / chamfer, so small
-   models never need MAXScript for common mesh edits.
+   models never need MAXScript for common mesh edits. Check upstream's new `mesh_edit` and
+   `poly_edit` first; 1.6.6 may already cover part of this.
 2. A V-Ray render-settings tool (sampler, GI, output, render elements) on top of
    `maxscript-vray.md`.
 3. Extend `MODULE_CATEGORY` in `scripts/gen_tool_catalog.py`: 18 newer modules fall into

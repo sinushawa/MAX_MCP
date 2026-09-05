@@ -94,7 +94,7 @@ class ModuleFilterUnitTests(unittest.TestCase):
             config_dir = Path(temp_dir) / "3dsmax-mcp"
             config_dir.mkdir()
             (config_dir / "mcp_config.ini").write_text(
-                "[mcp]\ntool_profile = full\ndisabled_modules = chat, tyflow\n",
+                "[mcp]\ntool_profile = full\ndisabled_modules = effects, tyflow\n",
                 encoding="utf-8",
             )
             try:
@@ -103,13 +103,13 @@ class ModuleFilterUnitTests(unittest.TestCase):
                     os.environ.pop(key, None)
 
                 active = server.active_tool_modules("full")
-                self.assertNotIn("chat", active)
+                self.assertNotIn("effects", active)
                 self.assertNotIn("tyflow", active)
                 self.assertIn("render", active)
 
                 os.environ["MCP_DISABLED_MODULES"] = "render"
                 active = server.active_tool_modules("full")
-                self.assertIn("chat", active)
+                self.assertIn("effects", active)
                 self.assertNotIn("render", active)
 
                 os.environ["MCP_DISABLED_MODULES"] = ""
@@ -152,10 +152,10 @@ class ModuleFilterLaunchTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_full_profile_with_disabled_modules_hides_their_tools(self) -> None:
         names = await self._list_tool_names(
-            "[mcp]\ntool_profile = full\ndisabled_modules = chat, tyflow, tyflow_graph, mcg\n"
+            "[mcp]\ntool_profile = full\ndisabled_modules = effects, tyflow, tyflow_graph, mcg\n"
         )
-        self.assertNotIn("send_to_chat", names)
-        self.assertNotIn("chat_status", names)
+        self.assertNotIn("get_effects", names)
+        self.assertNotIn("toggle_effect", names)
         self.assertNotIn("get_tyflow_graph", names)
         self.assertNotIn("mcg_create_graph", names)
         self.assertIn("render_scene", names)
@@ -164,16 +164,16 @@ class ModuleFilterLaunchTests(unittest.IsolatedAsyncioTestCase):
     async def test_env_disabled_modules_overrides_ini(self) -> None:
         names = await self._list_tool_names(
             "[mcp]\ntool_profile = full\ndisabled_modules = render\n",
-            extra_env={"MCP_DISABLED_MODULES": "chat"},
+            extra_env={"MCP_DISABLED_MODULES": "effects"},
         )
         self.assertIn("render_scene", names)
-        self.assertNotIn("send_to_chat", names)
+        self.assertNotIn("get_effects", names)
 
     async def test_progressive_profile_respects_disabled_modules(self) -> None:
         env = {key: value for key, value in os.environ.items() if key not in FILTER_ENV_KEYS}
         env["MCP_TOOL_PROFILE"] = "progressive"
         env["MCP_DISABLED_MODULES"] = (
-            "chat, tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, mcg"
+            "effects, tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, mcg"
         )
         params = StdioServerParameters(command=sys.executable, args=["-m", "maxmcp.server"], env=env)
         async with stdio_client(params) as (read_stream, write_stream):

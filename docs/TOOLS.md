@@ -1,6 +1,6 @@
 # 3dsmax-mcp tool reference
 
-Generated from `tool_playground/catalog.json` (v2). 153 tools.
+Generated from `tool_playground/catalog.json` (v2). 160 tools.
 
 **Profile**: `core` tools are exposed in both the core and full profiles; `full` tools only in the full profile. **Risk**: `safe` and `read` do not change the scene, `changes_scene` mutates it, `advanced` runs arbitrary or destructive operations. **Routing**: `native` goes through the C++ bridge, `maxscript` sends generated MAXScript, `python` is handled server-side or composes other tools.
 
@@ -10,17 +10,17 @@ Generated from `tool_playground/catalog.json` (v2). 153 tools.
 |---|---|
 | Setup | 3 |
 | Scene | 5 |
-| Objects | 22 |
+| Objects | 25 |
 | Materials | 19 |
 | Inspect | 17 |
 | Animation | 9 |
-| Viewport & Render | 4 |
+| Viewport & Render | 6 |
 | Files | 4 |
-| Specialty | 45 |
-| Advanced | 7 |
-| Other | 18 |
+| Specialty | 44 |
+| Advanced | 4 |
+| Other | 24 |
 
-By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, changes_scene 24.
+By profile: core 101, full-only 59. By risk: advanced 57, safe 37, read 40, changes_scene 26.
 
 
 ## Setup
@@ -49,11 +49,19 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 | `get_dependencies` | Trace the reference graph for an object using refs.dependents / refs.dependentnodes. | core | safe | native |
 | `get_instances` | Get all instances (copies sharing the same base object) of a scene object. | core | safe | native |
 | `manage_scene` | Manage the 3ds Max scene state. | core | read | native |
-| `query_scene` | Unified scene query. action: overview \| filter \| class \| property \| selection \| delta. | core | safe | python |
+| `query_scene` | Unified scene query. action: overview | filter | class | property | selection | delta. | core | safe | python |
 | `undo_last` | Undo the last 3ds Max scene operation. | core | read | native |
 
 ## Objects
 
+
+### Modeling
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `curve_model` | Construct editable curves, swept profiles or matched quad lofts with saved controls. | core | changes_scene | python |
+| `edit_curve` | Atomic world-space base-spline edits guarded by inspect_curve.curve_token. | core | changes_scene | python |
+| `inspect_curve` | Read an editable spline's world knots/handles, QA, and stale-edit token. | core | safe | native |
 
 ### Modifiers
 
@@ -78,7 +86,7 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 | `get_hierarchy` | Get the hierarchy tree of an object (recursive children). | core | safe | native |
 | `get_object_properties` | Get compact properties of a named object (transform, class, material name). | core | safe | native |
 | `isolate_and_capture_selected` | Capture isolated viewport screenshots of each selected object (resolves to top-level parents). | core | advanced | native |
-| `select_objects` | Select objects in the 3ds Max scene. | core | read | native |
+| `select_objects` | Select objects in the 3ds Max scene. An explicit names=[] clears selection. | core | read | native |
 | `set_object_property` | Set a property on a named object in the 3ds Max scene. | core | changes_scene | native |
 | `set_parent` | Parent or unparent objects in the 3ds Max scene. | core | changes_scene | native |
 | `set_visibility` | Show, hide, freeze, or unfreeze objects. | core | changes_scene | native |
@@ -106,7 +114,7 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
-| `assign_material` | Create a material and assign it to one or more objects. | core | changes_scene | native |
+| `assign_material` | Create a material, or share an existing object's material with targets. | core | changes_scene | native |
 | `backup_material_library` | Save material-library scratchpads to .mat files without changing the scene. | core | read | native |
 | `batch_replace_materials` | Replace multiple materials in a single operation. | core | advanced | native |
 | `create_material_from_textures` | Create a fully-wired PBR material from a folder of texture maps. | core | advanced | maxscript |
@@ -194,9 +202,11 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
+| `agent_viewport` | Own a shaded floating AGENT VIEWPORT without moving the user's view. | core | read | native |
 | `capture_multi_view` | Capture multiple viewport angles to a stitched file and return compact metadata. | core | advanced | native |
-| `capture_screen` | Capture fullscreen to a file only when explicitly enabled. | core | advanced | native |
-| `capture_viewport` | Capture the current 3ds Max viewport and return the saved file path. | core | advanced | native |
+| `capture_screen` | Capture visible desktop pixels, optionally cropped to the V-Ray frame buffer. | core | advanced | native |
+| `capture_viewport` | Capture AGENT VIEWPORT when open, otherwise the active view, to a saved file. | core | advanced | native |
+| `set_viewport` | Set the agent modeling view when open, otherwise the active viewport. | core | read | native |
 
 ## Files
 
@@ -233,12 +243,6 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 | `delete_effect` | Delete an atmospheric or render effect by index. | full | advanced | native |
 | `get_effects` | List all atmospheric effects and render effects in the scene. | full | safe | native |
 | `toggle_effect` | Enable or disable an atmospheric or render effect by index. | full | advanced | native |
-
-### Floor Plan
-
-| Tool | Description | Profile | Risk | Routing |
-|---|---|---|---|---|
-| `build_floor_plan` | Build a 2D floor plan from grid-based room definitions. | full | advanced | maxscript |
 
 ### Max Creation Graph
 
@@ -306,15 +310,7 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
 | `execute_maxscript` | Execute arbitrary MAXScript in 3ds Max and return the result. | core | advanced | maxscript |
-
-### Chat
-
-| Tool | Description | Profile | Risk | Routing |
-|---|---|---|---|---|
-| `chat_clear` | Drop the in-Max chat's conversation history. | full | advanced | native |
-| `chat_reload` | Re-read local chat config and environment without restarting Max. | full | advanced | native |
-| `chat_status` | Report the in-Max standalone chat status (visible/configured/model). | full | advanced | native |
-| `send_to_chat` | Send a message to the in-Max standalone chat (WIP) and block until the turn completes. | full | advanced | native |
+| `search_maxscript_docs` | Search the local MAXScript / 3ds Max reference index for API names, signatures, and patterns. | core | read | python |
 
 ### Tool Test
 
@@ -332,17 +328,43 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 |---|---|---|---|---|
 | `boolean_operation` | Boolean modeling on a base object via the Boolean modifier (BooleanMod). | core | read | python |
 
+### Component Pick
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `pick_component` | Target Editable Poly base-cage IDs from an AGENT VIEWPORT capture. | core | read | python |
+
+### Geometry Qa
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `geometry_qa` | Check evaluated mesh topology without changing the scene or collapsing its stack. | core | read | maxscript |
+
 ### Keyframes
 
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
 | `keyframe_tracks` | Deterministic native animation edits. Actions: timeline; list/set; delete_keys/move_keys/scale_keys; resample or bake; normalize_tangents/style; match/loop; ort. Key-time edits use time/times or from_time/to_time. bake replaces keys in its sample window by default; resample preserves them unless rep | core | read | native |
 
+### Loft
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `loft_mesh` | Create/read/update a parameterized quad loft stored on its mesh node in the .max file. | core | read | python |
+
 ### Mainthread
 
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
 | `main_thread` | Inspect or clean up what runs on the Max main/UI thread. | core | read | native |
+
+### Mesh Ops
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `create_mesh` | Create an Editable Poly from explicit WORLD vertices and ordered polygon faces. | core | read | python |
+| `inspect_mesh` | Inspect an Editable Poly BASE cage with actionable component IDs and optional labeled capture. | core | safe | native |
+| `mesh_edit` | Edit vertices, edges, and faces as one undoable batch, rolling back on failure. | core | read | python |
 
 ### Poly Edit
 
@@ -354,7 +376,7 @@ By profile: core 89, full-only 64. By risk: advanced 62, safe 35, read 32, chang
 
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
-| `render_automations` | Arm a done-signal for the NEXT render, then report when it finishes. | full | read | python |
+| `render_automations` | Arm a done-signal for the NEXT render, then report when it finishes. | full | read | native |
 
 ### Scene Patch
 

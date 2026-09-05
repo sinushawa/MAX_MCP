@@ -1,4 +1,5 @@
 __pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 *.egg-info/
@@ -17,11 +18,23 @@ nul
 cache/
 local/
 .env
-!.env.example
 
 # Live smoke run output (redirected stdout/stderr)
 smoke_out.json
 smoke_err.txt
+
+# Local diagnostics (this fork keeps tests/ tracked).
+/native/tests/
+/docs/AGENT-VIEWPORT.md
+/docs/MODELING-DEVELOPMENT.md
+
+# One-off smoke scripts.
+scripts/run_live_smoke.py
+scripts/live_native_port_parity.py
+scripts/run_agent_viewport_smoke.py
+scripts/run_archviz_smoke.py
+scripts/run_mesh_mcp_smoke.py
+scripts/run_mesh_smoke.py
 
 # Native C++ build artifacts (but ship the binary)
 native/build/

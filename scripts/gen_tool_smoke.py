@@ -40,12 +40,7 @@ SKIP_DEFAULT = {
     "create_material_from_textures",
     "replicate_material",
     "palette_laydown",
-    "build_floor_plan",
     "scatter_forest_pack",
-    "send_to_chat",
-    "chat_clear",
-    "chat_reload",
-    "chat_status",
     "toggle_effect",
     "delete_effect",
     "replace_material",
@@ -188,6 +183,8 @@ CUSTOM: dict[str, dict] = {
 }
 
 MUTATE_TOOLS = {
+    "curve_model",
+    "edit_curve",
     "create_object",
     "delete_objects",
     "clone_objects",
@@ -279,8 +276,6 @@ def collect_native_tools() -> list[dict]:
             if t["name"] in seen:
                 continue
             seen.add(t["name"])
-            if t["cmdType"] == "native:chat_ui":
-                continue
             if not t["cmdType"].startswith("native:") and t["cmdType"] != "maxscript":
                 continue
             t = dict(t)

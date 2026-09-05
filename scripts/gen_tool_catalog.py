@@ -13,7 +13,6 @@ OUT_PATH = ROOT / "tool_playground" / "catalog.json"
 
 sys.path.insert(0, str(ROOT))
 from scripts.gen_tool_registry import (  # noqa: E402
-    DISABLED_MODULES,
     build_schema,
     find_cmd_type,
     first_doc_line,
@@ -22,6 +21,8 @@ from scripts.gen_tool_registry import (  # noqa: E402
 from scripts.gen_tool_smoke import CUSTOM, MUTATE_TOOLS, SKIP_DEFAULT  # noqa: E402
 
 MODULE_CATEGORY = {
+    "curve_model": "Modeling",
+    "curve_edit": "Modeling",
     "bridge": "Connection",
     "query_scene": "Scene",
     "capabilities": "Connection",
@@ -53,11 +54,9 @@ MODULE_CATEGORY = {
     "wire_params": "Controllers",
     "execute": "Advanced",
     "docs_search": "Advanced",
-    "chat": "Chat",
     "data_channel": "Data Channel",
     "mcg": "Max Creation Graph",
     "effects": "Effects",
-    "floor_plan": "Floor Plan",
     "railclone": "RailClone",
     "render": "Render",
     "scattering": "Scattering",
@@ -68,6 +67,7 @@ MODULE_CATEGORY = {
 
 # Top-level buckets for the playground sidebar (order matters).
 CATEGORY_TO_GROUP: dict[str, str] = {
+    "Modeling": "Objects",
     "Connection": "Setup",
     "Session": "Setup",
     "Scene": "Scene",
@@ -86,7 +86,6 @@ CATEGORY_TO_GROUP: dict[str, str] = {
     "Files": "Files",
     "tyFlow": "Specialty",
     "RailClone": "Specialty",
-    "Floor Plan": "Specialty",
     "Data Channel": "Specialty",
     "Max Creation Graph": "Specialty",
     "Scattering": "Specialty",
@@ -94,7 +93,6 @@ CATEGORY_TO_GROUP: dict[str, str] = {
     "State Sets": "Specialty",
     "Advanced": "Advanced",
     "Tool Test": "Advanced",
-    "Chat": "Advanced",
 }
 
 GROUP_ORDER: list[str] = [
@@ -120,7 +118,7 @@ GROUP_HINTS: dict[str, str] = {
     "Viewport & Render": "Captures and rendering",
     "Files": "External .max inspection and merge",
     "Specialty": "MCG, Data Channel, tyFlow, RailClone, etc.",
-    "Advanced": "execute_maxscript, smoke tests, chat",
+    "Advanced": "execute_maxscript and native diagnostics",
 }
 
 STARTER_TOOLS = [
@@ -220,8 +218,6 @@ def collect_tools() -> list[dict]:
         except SyntaxError:
             continue
         module = path.stem
-        if module in DISABLED_MODULES:
-            continue
         category = MODULE_CATEGORY.get(module, module.replace("_", " ").title())
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef):

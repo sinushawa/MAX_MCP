@@ -40,10 +40,8 @@ def test_deploy_config_persists_selected_tool_profile(monkeypatch, tmp_path: Pat
     monkeypatch.setattr(install, "CONFIG_DIR", config_dir)
     monkeypatch.setattr(install, "CONFIG_DST", config_dst)
     monkeypatch.setattr(install, "CONFIG_SRC", tmp_path / "missing-config.ini")
-    monkeypatch.setattr(install, "ENV_DST", config_dir / ".env")
-    monkeypatch.setattr(install, "ENV_SRC", tmp_path / "missing-env")
 
-    assert install.deploy_config(skip_skill=True, tool_profile="core")
+    assert install.deploy_config(tool_profile="core")
     assert "tool_profile = core" in config_dst.read_text(encoding="utf-8")
 
 

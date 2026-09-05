@@ -11,20 +11,19 @@
 > by clone / m3org, released under the [MIT License](LICENSE). All credit for the server, the native
 > bridge, and the tool set belongs to the upstream author. This fork (sinushawa/MAX_MCP) tracks
 > upstream and adds a per-module tool filter with an in-Max settings window, a local MAXScript
-> reference index with a retrieval proxy for the in-Max chat, a harvested V-Ray 7 reference, and
+> reference index exposed as a `search_maxscript_docs` tool, a harvested V-Ray 7 reference, and
 > an installer fix for running instances of 3ds Max. Fork-specific notes live in [CLAUDE.md](CLAUDE.md);
 > everything below is the upstream README. Report upstream issues to the upstream project.
 
 Connect AI agents to Autodesk 3ds Max through the [Model Context Protocol](https://modelcontextprotocol.io).
-Ask in natural language; the agent creates objects, builds materials, inspects plugins with dedicated MCP tools instead of MAXScript/Python feedback loops.
 
-**Current release: 1.5.5** — see [CHANGELOG.md](docs/CHANGELOG.md).
+Automate everything!
 
-> 中文文档：[README.zh-CN.md](README.zh-CN.md)
+**Current release: 1.6.6 — Astra Special Release** — see [CHANGELOG.md](docs/CHANGELOG.md).
 
 ## Features
 
-- **151 MCP tools** — (87 in core profile) for scene reads, materials, modifiers, controllers, viewport capture, procedural graphs, and plugin workflows.
+- **160 MCP tools** — For scene reads, modeling, materials, modifiers, controllers, viewport capture, procedural graphs, and plugin workflows.
 - **Native Bridge** — only 2023-2027 versions.
 - **Introspection** — discover arbitrary Max classes for all kinds of automation and scripting purposes. 
 - **Bundled agent skill** — There is a bundled maxscript documentation if you want to create your own tools.
@@ -44,7 +43,7 @@ uv sync
 uv run python install.py
 ```
 
-Choose the MCP tool profile when prompted. **Full** is the default for maximum client compatibility. **Progressive** exposes three discovery tools and loads exact operational schemas only when needed, which can substantially reduce context use for local or smaller models. For an unattended context-efficient install, use `--tool-profile progressive`.
+Choose the MCP tool profile when prompted. **Full** is the default for maximum client compatibility and performance. **Progressive** exposes three discovery tools and loads exact operational schemas only when needed, which can substantially reduce context use for local or smaller models.
 
 Restart 3ds Max, then connect your MCP client. The installer registers the server where it can; see [Advanced configuration](docs/ADVANCED.md) for manual client setup.
 
@@ -57,6 +56,9 @@ uv run python install.py
 ```
 
 ## Tools
+
+<details>
+<summary>Browse the full tool catalog</summary>
 
 ### Bridge & session
 
@@ -110,6 +112,13 @@ uv run python install.py
 
 | Tool | Description |
 |------|-------------|
+| `curve_model` | Named curves, rounded profiles, sweeps and quad lofts with controls saved in the scene |
+| `inspect_curve` / `edit_curve` | Inspect, visually target and edit spline knots and handles with stale-token protection |
+| `create_mesh` | Build editable polygon cages from explicit vertices and faces |
+| `inspect_mesh` / `pick_component` | Read cage geometry, label components and map image positions to edit targets |
+| `mesh_edit` | Undoable vertex, edge and face edits that preserve the modifier stack |
+| `loft_mesh` | Matched-section quad lofts with persistent numeric parameters |
+| `geometry_qa` | Check mesh boundaries, winding, degeneracy and connected components |
 | `boolean_operation` | Apply, inspect, retune, rename, or extract Boolean modifier operands; supports inline repeated cutters |
 | `draw_spline` | Create, read, and edit spline shapes from explicit world-space points and knots |
 | `edit_vertices` | Read, move, set, or conform Editable Poly vertices in world space |
@@ -203,11 +212,13 @@ MCP resources: `resource://3dsmax-mcp/plugins/{name}/manifest|guide|recipes|gotc
 
 | Tool | Description |
 |------|-------------|
-| `capture_viewport` | Capture the active viewport as an image |
-| `capture_multi_view` | Front/right/back/top grid stitched into one image |
-| `capture_screen` | Fullscreen capture (explicit opt-in) |
+| `agent_viewport` | Independent floating agent view, visual targeting and V-Ray preview controls |
+| `set_viewport` | Position and frame the agent or user viewport |
+| `capture_viewport` | Capture the agent or user viewport as an image |
+| `capture_multi_view` | Capture several views into one image, with agent-view restoration |
+| `capture_screen` | Capture visible desktop pixels or crop to the V-Ray frame buffer |
 | `render_scene` | Render the current view |
-| `render_automations` | Arm a completion signal for the next render, then poll or wait for it to finish |
+| `render_automations` | Arm/poll completion signals, request cancellation or capture a progressive render before cancelling |
 
 ### External `.max` files
 
@@ -261,8 +272,6 @@ MCP resources: `resource://3dsmax-mcp/plugins/{name}/manifest|guide|recipes|gotc
 | `mcg_cleanup_workspace` | Remove one graph family or the temporary MCG workspace |
 | `mcg_reload_operators` | Explicitly refresh Max's global MCG operator depot |
 
-> **Work in progress** — the plugin and layout integrations below (tyFlow, Forest Pack, RailClone, Floor plan) are early-stage and may be incomplete or change between releases. Everything listed above is stable.
-
 ### tyFlow
 
 | Tool | Description |
@@ -291,6 +300,8 @@ MCP resources: `resource://3dsmax-mcp/plugins/{name}/manifest|guide|recipes|gotc
 | `get_tyflow_particles` | Particle data rows |
 | `reset_tyflow_simulation` | Reset one or all tyFlow sims |
 
+> **Work in progress** — the Forest Pack and RailClone integrations below are early-stage and may be incomplete or change between releases. Everything listed above is stable.
+
 ### Forest Pack (WIP)
 
 | Tool | Description |
@@ -303,20 +314,14 @@ MCP resources: `resource://3dsmax-mcp/plugins/{name}/manifest|guide|recipes|gotc
 |------|-------------|
 | `get_railclone_style_graph` | Read style-editor bases, segments, and parameters |
 
-### Floor plan (WIP)
-
-| Tool | Description |
-|------|-------------|
-| `build_floor_plan` | Generate a 2D floor plan from grid-based room definitions |
-
-
 ### Scripting & diagnostics
 
 | Tool | Description |
 |------|-------------|
 | `execute_maxscript` | Run MAXScript when no dedicated tool exists (respects safe mode) |
 | `invoke_tool` | Call any registered tool from inside Max (testing) |
-| `run_tool_smoke` | Run live smoke cases against the bridge |
+
+</details>
 
 ---
 
@@ -326,6 +331,6 @@ The installer builds an agent skill from `skills/3dsmax-mcp-dev/SKILL.md` with t
 
 ## Further reading
 
-- **[Advanced configuration](docs/ADVANCED.md)** — architecture, safe mode, tool profiles, native builds, standalone chat (WIP)
+- **[Advanced configuration](docs/ADVANCED.md)** — architecture, safe mode, tool profiles, native builds
 - **[CHANGELOG.md](docs/CHANGELOG.md)** — release history
 - **[LICENSE](LICENSE)**

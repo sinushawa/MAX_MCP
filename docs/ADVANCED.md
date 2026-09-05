@@ -1,6 +1,6 @@
 # Advanced configuration
 
-Technical reference for 3dsmax-mcp: architecture, build, profiles, security, and in-Max chat (WIP).
+Technical reference for 3dsmax-mcp: architecture, build, profiles, and security.
 
 ## Architecture
 
@@ -114,14 +114,13 @@ uv run 3dsmax-mcp
 
 The installer persists the choice as `[mcp] tool_profile` in
 `%LOCALAPPDATA%\3dsmax-mcp\mcp_config.ini`. `MCP_TOOL_PROFILE` (or
-`THREEDSMAX_MCP_TOOL_PROFILE`) overrides that setting for a specific launch. This is separate
-from `[llm] tool_profile`, which controls only the experimental standalone in-Max chat.
+`THREEDSMAX_MCP_TOOL_PROFILE`) overrides that setting for a specific launch.
 
 | Profile | Advertised surface |
 |---------|--------------------|
 | **progressive** (context-efficient) | Three discovery/dispatch meta-tools; operational modules and schemas load only when described or called; useful for local or smaller models |
 | **core** | Eager scene, object, material, modifier, controller, viewport, file, plugin, organization, and learning tools |
-| **full** (installer default) | Eager core plus tyFlow, MCG, Forest Pack, RailClone, Data Channel, effects, floor plan, state sets, wire params, render, render automations, and in-Max chat drivers (WIP) |
+| **full** (installer default) | Eager core plus tyFlow, MCG, Forest Pack, RailClone, Data Channel, effects, state sets, wire params, render, render automations |
 
 Progressive workflow:
 
@@ -138,7 +137,7 @@ $env:MCP_TOOL_PROFILE = "core"
 uv run 3dsmax-mcp
 ```
 
-Specialty modules in full profile: `chat`, `data_channel`, `effects`, `floor_plan`, `mcg`, `railclone`, `render`, `render_automations`, `scattering`, `state_sets`, `tyflow`, `tyflow_graph`, `tyflow_patch`, `tyflow_manifest`, `tyflow_census`, `wire_params`.
+Specialty modules in full profile: `data_channel`, `effects`, `mcg`, `railclone`, `render`, `render_automations`, `scattering`, `state_sets`, `tyflow`, `tyflow_graph`, `tyflow_patch`, `tyflow_manifest`, `tyflow_census`, `wire_params`.
 
 ### Module filter
 
@@ -149,7 +148,7 @@ Any profile can be trimmed further per module. Module names are the files in
 [mcp]
 tool_profile = full
 ; comma-separated; applied after the profile picks its modules
-disabled_modules = chat, tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, railclone, scattering, floor_plan, data_channel, mcg
+disabled_modules = tyflow, tyflow_graph, tyflow_patch, tyflow_manifest, tyflow_census, railclone, scattering, data_channel, mcg
 ; optional allowlist; when non-empty only these modules load (disabled_modules still applies)
 enabled_modules =
 ```
@@ -173,7 +172,7 @@ writes the ini file; reconnect your MCP client afterwards so the server restarts
 
 ## Config file
 
-Shared by the native bridge, MAXScript listener, and standalone chat:
+Shared by the native bridge, MAXScript listener, and external MCP server:
 
 ```
 %LOCALAPPDATA%\3dsmax-mcp\mcp_config.ini
@@ -185,25 +184,7 @@ Example:
 [mcp]
 safe_mode = true
 tcp_idle_poll_interval_ms = 1500
-
-[llm]
-base_url = https://openrouter.ai/api/v1
-model = anthropic/claude-sonnet-4.6
-max_tokens = 4096
-temperature = 0.2
-prompt_mode = compact
-tool_profile = full
-include_scene_snapshot = false
-max_scene_roots = 25
-max_prompt_chars = 12000
-max_tool_result_chars = 12000
-max_history_tool_chars = 1800
-max_tool_summary_chars = 600
-max_display_tool_chars = 600
-max_tool_loops = 4
 ```
-
-API keys for standalone chat live in `%LOCALAPPDATA%\3dsmax-mcp\.env` (see `.env.example`). Real environment variables override the file.
 
 ## Safe mode
 
@@ -229,8 +210,6 @@ What it does **not** cover:
 - Native handlers run unfiltered: `delete_objects`, `manage_scene`, `render_scene`, `merge_from_file`, `write_osl_shader`, viewport capture (disk writes), etc.
 - The named pipe uses default ACLs — any process running as your user can connect on a typical dev machine.
 
-Treat standalone chat like any local agent that can edit your scene. Keep API keys out of shared drives.
-
 ## Multi-instance Max
 
 Each 3ds Max window registers its own native pipe. With one Max running, clients connect automatically. With several open, run **MCP Claim This Max** in the target window so clients route to that instance until another is claimed.
@@ -251,23 +230,6 @@ python scripts/build_skill.py --target global   # user-level .claude/skills and 
 Bundled MAXScript reference lives under `skills/3dsmax-mcp-dev/` (10 topic files). MCP resource: `resource://3dsmax-mcp/skill`.
 
 Anthropic models sometimes prefer raw MAXScript over dedicated tools; Codex tends to use native tools more reliably. The skill reduces that gap.
-
-## Standalone chat (in-Max)
-
-> **Work in progress.** The in-Max chat window and its helper tools are under active development. APIs, config keys, and behavior may change between releases. For day-to-day work, prefer an **external MCP client** (Cursor, Claude Desktop, Codex, etc.) — that path is stable.
-
-Run an LLM inside 3ds Max without an external MCP client — same tool surface as external MCP when it works.
-
-Open **MCP Chat** from Customize UI → MCP, or search the macro globally.
-
-- **API key:** `%LOCALAPPDATA%\3dsmax-mcp\.env` (see `.env.example`; `OPENROUTER_API_KEY`, `LLM_API_KEY`, or `OPENAI_API_KEY`)
-- **Settings:** `[llm]` section in `mcp_config.ini`
-- **Tools:** Auto-generated registry from `maxmcp/tools/*.py` (`scripts/gen_tool_registry.py` at build time)
-- **Security:** Same `safe_mode` filter as external MCP for `execute_maxscript`
-- **Slash commands:** `/reload`, `/clear`, `/help`
-- **Skill:** Deployed to `%LOCALAPPDATA%\3dsmax-mcp\skill\SKILL.md`; `prompt_mode=full` injects the full skill into the system prompt
-
-External helper tools (for automation outside Max): `send_to_chat`, `chat_status`, `chat_reload`, `chat_clear`.
 
 ## Local MAXScript reference retrieval
 
@@ -294,22 +256,12 @@ after editing any reference file; the running proxy must be restarted to pick it
 **External clients** get the `search_maxscript_docs` tool (module `docs_search`, core
 profile). `execute_maxscript` errors on sub-object or Edit Poly scripts now hint at it.
 
-**The in-Max chat window** cannot call Python tools, so run the retrieval proxy and point
-the chat at it. `Docs Proxy.bat` builds the index if missing and starts the proxy on
-port 11435; it forwards everything to Ollama and only rewrites the system message:
-
-```ini
-[llm]
-base_url = http://localhost:11435/v1
-model = qwen3.8:latest
-prompt_mode = full
-```
-
-Each turn the proxy embeds the latest user message plus the most recent failed
-MAXScript and its error, prepends the top matching reference chunks to the system
-prompt, and logs the chunk titles to its console. Retrieval failures never block the
-chat; the request is forwarded unchanged. `MAXMCP_OLLAMA_URL` and `MAXMCP_EMBED_MODEL`
-override the defaults.
+**Retrieval proxy (optional).** `Docs Proxy.bat` builds the index if missing and starts an
+OpenAI-compatible proxy on port 11435 that forwards to Ollama and prepends the top matching
+reference chunks to the system message of every chat completion. It was written for the
+standalone in-Max chat, which upstream removed in 1.6.6; it remains usable by any local
+OpenAI-compatible client that should see MAXScript reference context. `MAXMCP_OLLAMA_URL`
+and `MAXMCP_EMBED_MODEL` override the defaults.
 
 ## Building the native bridge
 
@@ -352,5 +304,5 @@ python scripts/run_live_tool_smoke.py --tier read
 | `native/` | C++ GUP bridge |
 | `maxscript/` | Listener + autostart |
 | `skills/3dsmax-mcp-dev/` | Agent skill source |
-| `scripts/build_skill.py` | Skill + AGENTS.md generator |
-| `scripts/gen_tool_registry.py` | In-Max chat tool registry |
+| `scripts/build_skill.py` | Skill archive builder and installer |
+| `scripts/gen_tool_registry.py` | Native diagnostic tool registry |
