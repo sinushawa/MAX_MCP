@@ -1,5 +1,9 @@
 # 3dsmax-mcp
 
+> **本仓库是 [cl0nazepamm/3dsmax-mcp](https://github.com/cl0nazepamm/3dsmax-mcp)（作者 clone / m3org，MIT 许可）的个人分支。**
+> 服务器、原生桥接和工具集均归上游作者所有。本分支（sinushawa/MAX_MCP）在上游基础上增加了按模块过滤工具、
+> 3ds Max 内的设置窗口、本地 MAXScript 参考检索代理以及 V-Ray 7 参考。分支说明见 [CLAUDE.md](CLAUDE.md)。
+
 通过 [Model Context Protocol](https://modelcontextprotocol.io) 把 AI 智能体接入 **Autodesk 3ds Max**。
 
 用中文描述你要做的事，智能体通过专用 MCP 工具直接操作场景——创建物体、构建材质、驱动修改器与控制器、

@@ -7,6 +7,14 @@
   </picture>
 </p>
 
+> **This is a personal fork of [cl0nazepamm/3dsmax-mcp](https://github.com/cl0nazepamm/3dsmax-mcp)**
+> by clone / m3org, released under the [MIT License](LICENSE). All credit for the server, the native
+> bridge, and the tool set belongs to the upstream author. This fork (sinushawa/MAX_MCP) tracks
+> upstream and adds a per-module tool filter with an in-Max settings window, a local MAXScript
+> reference index with a retrieval proxy for the in-Max chat, a harvested V-Ray 7 reference, and
+> an installer fix for running instances of 3ds Max. Fork-specific notes live in [CLAUDE.md](CLAUDE.md);
+> everything below is the upstream README. Report upstream issues to the upstream project.
+
 Connect AI agents to Autodesk 3ds Max through the [Model Context Protocol](https://modelcontextprotocol.io).
 Ask in natural language; the agent creates objects, builds materials, inspects plugins with dedicated MCP tools instead of MAXScript/Python feedback loops.
 
@@ -30,7 +38,7 @@ Ask in natural language; the agent creates objects, builds materials, inspects p
 ## Quick start
 
 ```powershell
-git clone https://github.com/cl0nazepamm/3dsmax-mcp.git
+git clone https://github.com/sinushawa/MAX_MCP.git   # fork; upstream: https://github.com/cl0nazepamm/3dsmax-mcp
 cd 3dsmax-mcp
 uv sync
 uv run python install.py
