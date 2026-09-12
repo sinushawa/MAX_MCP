@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "tool_count": 160,
+  "tool_count": 173,
   "starter_tools": [
     "query_scene",
     "get_session_context",
@@ -350,7 +350,7 @@
     {
       "name": "Other",
       "hint": "",
-      "tool_count": 24,
+      "tool_count": 37,
       "categories": [
         {
           "name": "Booleans",
@@ -362,6 +362,24 @@
           "name": "Component Pick",
           "tools": [
             "pick_component"
+          ]
+        },
+        {
+          "name": "Entities",
+          "tools": [
+            "apply_entity",
+            "entity_automation",
+            "entity_bounds",
+            "entity_evidence",
+            "entity_status",
+            "get_object_entities",
+            "list_entities",
+            "pending_proposals",
+            "present_proposals",
+            "remove_from_entity",
+            "request_entity_proposals",
+            "review_entity_proposals",
+            "set_entity_zone"
           ]
         },
         {
@@ -3316,6 +3334,346 @@
         "expected_view": ""
       },
       "risk": "read",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "apply_entity",
+      "description": "Put objects into an entity path, creating missing branches. One undo step in Max.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "layer": {
+            "type": "boolean"
+          },
+          "rename": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "example": {
+        "path": ""
+      },
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "entity_automation",
+      "description": "Start, stop or inspect the session's background entity ranker using local Ollama.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "embedding_model": {
+            "type": "string"
+          }
+        }
+      },
+      "example": {},
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "entity_bounds",
+      "description": "World bounding box of every entity's branch (its objects plus descendants).",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "example": {},
+      "risk": "read",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "entity_evidence",
+      "description": "Features and containment candidates for objects, the plugin half of an entity proposal.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "example": {},
+      "risk": "read",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "entity_status",
+      "description": "Report whether TagManager is loaded and how its facade is configured.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "example": {},
+      "risk": "read",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "get_object_entities",
+      "description": "Entity paths that own each given object (by scene name and/or node handle).",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "example": {},
+      "risk": "safe",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "list_entities",
+      "description": "List every TagManager entity below Project: path, depth, member and child counts.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "example": {},
+      "risk": "safe",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "pending_proposals",
+      "description": "Proposals waiting for confirmation in TagManager.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "handle": {
+            "type": "integer"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "example": {},
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "present_proposals",
+      "description": "Hand a ranked candidate list per object to TagManager.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "proposals": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "session": {
+            "type": "string"
+          },
+          "threshold": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "proposals"
+        ]
+      },
+      "example": {
+        "proposals": []
+      },
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "remove_from_entity",
+      "description": "Take objects out of one entity path. One undo step in Max.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "example": {
+        "path": ""
+      },
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "request_entity_proposals",
+      "description": "Gather fresh evidence and request reviewable suggestions; returns session and tokens.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "handles"
+        ]
+      },
+      "example": {
+        "handles": []
+      },
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "review_entity_proposals",
+      "description": "Open FastTag with inline suggestions for the current selection, before typing.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "example": {},
+      "risk": "changes_scene",
+      "routing": "python",
+      "starter": false
+    },
+    {
+      "name": "set_entity_zone",
+      "description": "Use explicit volume nodes for an entity's containment bounds in this session.",
+      "category": "Entities",
+      "group": "Other",
+      "module": "entities",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "handles": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "example": {
+        "path": ""
+      },
+      "risk": "changes_scene",
       "routing": "python",
       "starter": false
     },

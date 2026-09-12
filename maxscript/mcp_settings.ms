@@ -17,6 +17,7 @@ global mcpSettings_specialtyModules = #(
 	#("render_automations", "Render automations"),
 	#("state_sets", "State sets"),
 	#("effects", "Effects"),
+	#("entities", "TagManager entities"),
 	#("wire_params", "Parameter wiring"),
 	#("data_channel", "Data Channel"),
 	#("mcg", "Max Creation Graph"),

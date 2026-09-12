@@ -137,7 +137,7 @@ $env:MCP_TOOL_PROFILE = "core"
 uv run 3dsmax-mcp
 ```
 
-Specialty modules in full profile: `data_channel`, `effects`, `mcg`, `railclone`, `render`, `render_automations`, `scattering`, `state_sets`, `tyflow`, `tyflow_graph`, `tyflow_patch`, `tyflow_manifest`, `tyflow_census`, `wire_params`.
+Specialty modules in full profile: `data_channel`, `effects`, `entities`, `mcg`, `railclone`, `render`, `render_automations`, `scattering`, `state_sets`, `tyflow`, `tyflow_graph`, `tyflow_patch`, `tyflow_manifest`, `tyflow_census`, `wire_params`.
 
 ### Module filter
 

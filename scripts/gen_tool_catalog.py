@@ -54,6 +54,7 @@ MODULE_CATEGORY = {
     "wire_params": "Controllers",
     "execute": "Advanced",
     "docs_search": "Advanced",
+    "entities": "Entities",
     "data_channel": "Data Channel",
     "mcg": "Max Creation Graph",
     "effects": "Effects",

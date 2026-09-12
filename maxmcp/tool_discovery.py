@@ -132,6 +132,11 @@ TOOLSET_SPECS = (
         ("effects", "state_sets"),
     ),
     ToolsetSpec(
+        "entities",
+        "TagManager entity tags: list, look up, apply, and gather containment evidence for proposals.",
+        ("entities",),
+    ),
+    ToolsetSpec(
         "rendering",
         "Render configuration and render automation drivers.",
         ("render", "render_automations"),

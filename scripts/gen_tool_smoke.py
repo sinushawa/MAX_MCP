@@ -183,6 +183,14 @@ CUSTOM: dict[str, dict] = {
 }
 
 MUTATE_TOOLS = {
+    "request_entity_proposals",
+    "review_entity_proposals",
+    "set_entity_zone",
+    "entity_automation",
+    "apply_entity",
+    "remove_from_entity",
+    "present_proposals",
+    "pending_proposals",
     "curve_model",
     "edit_curve",
     "create_object",

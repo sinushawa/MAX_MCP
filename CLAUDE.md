@@ -24,6 +24,7 @@ continue the work.
 | Error hints / descriptions | `maxmcp/helpers/error_hints.py`, `maxmcp/tools/execute.py` | Edit Poly / sub-object scripts that fail now suggest `search_maxscript_docs` and introspection instead of retrying. |
 | Installer fix | `install.py` (`sync_tree`) | Bundle is synced file by file. Upstream deleted the whole package first; a running Max locks `mcp_bridge_<year>.gup`, and the failed delete left the package without its scripts. |
 | Tool reference | `docs/TOOLS.md`, `scripts/gen_tools_doc.py` | Generated from `tool_playground/catalog.json`; regenerate with `scripts/gen_tool_catalog.py` then `scripts/gen_tools_doc.py`. |
+| TagManager entity tools | `maxmcp/tools/entities.py`, `maxmcp/entity_proposals.py`, `docs/ENTITY-PROPOSALS.md` | Specialty module `entities` wraps TagApi 1.2 in `D:/github/TagManager`. Inline FastTag proposals combine architectural shape priors, spatial and confirmed-neighbour evidence with optional local LLM ranking. Requires session/tokens; review-only by default. See the development page for startup, performance and session-scoped limits. |
 | Tracked tests | `tests/` | Upstream stopped tracking its tests in 1.6.6 (`/tests/` gitignored). The fork keeps them tracked and removed only the ones for features upstream deleted (chat, builder). |
 
 ## Owner's environment (primary machine)

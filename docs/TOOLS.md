@@ -1,6 +1,6 @@
 # 3dsmax-mcp tool reference
 
-Generated from `tool_playground/catalog.json` (v2). 160 tools.
+Generated from `tool_playground/catalog.json` (v2). 173 tools.
 
 **Profile**: `core` tools are exposed in both the core and full profiles; `full` tools only in the full profile. **Risk**: `safe` and `read` do not change the scene, `changes_scene` mutates it, `advanced` runs arbitrary or destructive operations. **Routing**: `native` goes through the C++ bridge, `maxscript` sends generated MAXScript, `python` is handled server-side or composes other tools.
 
@@ -18,9 +18,9 @@ Generated from `tool_playground/catalog.json` (v2). 160 tools.
 | Files | 4 |
 | Specialty | 44 |
 | Advanced | 4 |
-| Other | 24 |
+| Other | 37 |
 
-By profile: core 101, full-only 59. By risk: advanced 57, safe 37, read 40, changes_scene 26.
+By profile: core 101, full-only 72. By risk: advanced 57, safe 39, read 43, changes_scene 34.
 
 
 ## Setup
@@ -333,6 +333,24 @@ By profile: core 101, full-only 59. By risk: advanced 57, safe 37, read 40, chan
 | Tool | Description | Profile | Risk | Routing |
 |---|---|---|---|---|
 | `pick_component` | Target Editable Poly base-cage IDs from an AGENT VIEWPORT capture. | core | read | python |
+
+### Entities
+
+| Tool | Description | Profile | Risk | Routing |
+|---|---|---|---|---|
+| `apply_entity` | Put objects into an entity path, creating missing branches. One undo step in Max. | full | changes_scene | python |
+| `entity_automation` | Start, stop or inspect the session's background entity ranker using local Ollama. | full | changes_scene | python |
+| `entity_bounds` | World bounding box of every entity's branch (its objects plus descendants). | full | read | python |
+| `entity_evidence` | Features and containment candidates for objects, the plugin half of an entity proposal. | full | read | python |
+| `entity_status` | Report whether TagManager is loaded and how its facade is configured. | full | read | python |
+| `get_object_entities` | Entity paths that own each given object (by scene name and/or node handle). | full | safe | python |
+| `list_entities` | List every TagManager entity below Project: path, depth, member and child counts. | full | safe | python |
+| `pending_proposals` | Proposals waiting for confirmation in TagManager. | full | changes_scene | python |
+| `present_proposals` | Hand a ranked candidate list per object to TagManager. | full | changes_scene | python |
+| `remove_from_entity` | Take objects out of one entity path. One undo step in Max. | full | changes_scene | python |
+| `request_entity_proposals` | Gather fresh evidence and request reviewable suggestions; returns session and tokens. | full | changes_scene | python |
+| `review_entity_proposals` | Open FastTag with inline suggestions for the current selection, before typing. | full | changes_scene | python |
+| `set_entity_zone` | Use explicit volume nodes for an entity's containment bounds in this session. | full | changes_scene | python |
 
 ### Geometry Qa
 
